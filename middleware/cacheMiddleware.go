@@ -5,10 +5,13 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/anshg1214/CacheRocket/config"
 	"github.com/gin-gonic/gin"
 )
+
+var cacheLock sync.Map
 
 func CacheMiddleware() gin.HandlerFunc {
 
@@ -33,28 +36,41 @@ func CacheMiddleware() gin.HandlerFunc {
 			ctx := context.Background()
 			cachedData, err := config.Client.Get(ctx, cacheKey).Result()
 			if err != nil {
-				c.Next()
 
-				// If the request was successful, cache the data
-				if c.Writer.Status() == http.StatusOK {
-					data := c.MustGet("data").([]byte)
+				// Data is not cached, acquire a lock for this key
+				lock, _ := cacheLock.LoadOrStore(cacheKey, &sync.Mutex{})
+				lock.(*sync.Mutex).Lock()
+				defer lock.(*sync.Mutex).Unlock()
 
-					if url == "/posts/:id" && config.CACHE_POST {
-						cacheErr := config.Client.Set(ctx, cacheKey, data, 0).Err()
-						if cacheErr != nil {
-							log.Println("🚀 Error caching data")
-							c.Abort()
-							return
-						}
-					} else if url == "/todos/:id" && config.CACHE_TODO {
-						cacheErr := config.Client.Set(ctx, cacheKey, data, 0).Err()
-						if cacheErr != nil {
-							log.Println("🚀 Error caching data")
-							c.Abort()
-							return
+				// Check if another request has fetched the data while we were waiting for the lock
+				cachedData, err = config.Client.Get(ctx, cacheKey).Result()
+				if err != nil {
+					c.Next()
+
+					// If the request was successful, cache the data
+					if c.Writer.Status() == http.StatusOK {
+						data := c.MustGet("data").([]byte)
+
+						if url == "/posts/:id" && config.CACHE_POST {
+							cacheErr := config.Client.Set(ctx, cacheKey, data, 0).Err()
+							if cacheErr != nil {
+								log.Println("🚀 Error caching data")
+								c.Abort()
+								return
+							}
+						} else if url == "/todos/:id" && config.CACHE_TODO {
+							cacheErr := config.Client.Set(ctx, cacheKey, data, 0).Err()
+							if cacheErr != nil {
+								log.Println("🚀 Error caching data")
+								c.Abort()
+								return
+							}
 						}
 					}
+					return
 				}
+				c.Data(http.StatusOK, "application/json", []byte(cachedData))
+				c.Abort()
 				return
 			}
 
