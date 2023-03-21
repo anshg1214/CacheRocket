@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -30,16 +30,34 @@ func CacheMiddleware() gin.HandlerFunc {
 			c.Next()
 			return
 		} else {
-			fmt.Println("🚀 Fetching data from cache...")
-
 			ctx := context.Background()
 			cachedData, err := config.Client.Get(ctx, cacheKey).Result()
 			if err != nil {
 				c.Next()
+
+				// If the request was successful, cache the data
+				if c.Writer.Status() == http.StatusOK {
+					data := c.MustGet("data").([]byte)
+
+					if url == "/posts/:id" && config.CACHE_POST {
+						cacheErr := config.Client.Set(ctx, cacheKey, data, 0).Err()
+						if cacheErr != nil {
+							log.Println("🚀 Error caching data")
+							c.Abort()
+							return
+						}
+					} else if url == "/todos/:id" && config.CACHE_TODO {
+						cacheErr := config.Client.Set(ctx, cacheKey, data, 0).Err()
+						if cacheErr != nil {
+							log.Println("🚀 Error caching data")
+							c.Abort()
+							return
+						}
+					}
+				}
 				return
 			}
 
-			fmt.Println("🚀 Data fetched from cache")
 			c.Data(http.StatusOK, "application/json", []byte(cachedData))
 			c.Abort()
 			return

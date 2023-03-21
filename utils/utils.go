@@ -17,8 +17,15 @@ func CacheData(cacheKey string, data []byte) error {
 
 func ThrowInternalServerError(c *gin.Context, err error) {
 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	c.Abort()
 }
 
 func ThrowInvalidJSONError(c *gin.Context) {
 	c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
+	c.Abort()
+}
+
+func ThrowNotFoundError(c *gin.Context) {
+	c.JSON(http.StatusNotFound, gin.H{})
+	c.Abort()
 }

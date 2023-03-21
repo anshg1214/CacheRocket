@@ -21,6 +21,14 @@ func GetPost(c *gin.Context) {
 		return
 	}
 
+	if response.StatusCode == http.StatusNotFound {
+		utils.ThrowNotFoundError(c)
+		return
+	} else if response.StatusCode != http.StatusOK {
+		utils.ThrowInternalServerError(c, err)
+		return
+	}
+
 	// Close the response body
 	defer response.Body.Close()
 
@@ -38,13 +46,7 @@ func GetPost(c *gin.Context) {
 		return
 	}
 
-	if config.CACHE_POST {
-		cacheErr := utils.CacheData("posts:"+postID, body)
-		if cacheErr != nil {
-			utils.ThrowInternalServerError(c, cacheErr)
-			return
-		}
-	}
+	c.Set("data", body)
 
 	// Send the response body to the client
 	c.Data(http.StatusOK, "application/json", body)
