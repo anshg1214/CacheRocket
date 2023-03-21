@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/anshg1214/CacheRocket/config"
+	"github.com/anshg1214/CacheRocket/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -34,7 +35,7 @@ func CacheMiddleware() gin.HandlerFunc {
 			return
 		} else {
 			ctx := context.Background()
-			cachedData, err := config.Client.Get(ctx, cacheKey).Result()
+			cachedData, err := utils.GetValueFromCache(cacheKey, ctx)
 			if err != nil {
 
 				// Data is not cached, acquire a lock for this key
@@ -43,7 +44,7 @@ func CacheMiddleware() gin.HandlerFunc {
 				defer lock.(*sync.Mutex).Unlock()
 
 				// Check if another request has fetched the data while we were waiting for the lock
-				cachedData, err = config.Client.Get(ctx, cacheKey).Result()
+				cachedData, err = utils.GetValueFromCache(cacheKey, ctx)
 				if err != nil {
 					c.Next()
 
@@ -52,14 +53,14 @@ func CacheMiddleware() gin.HandlerFunc {
 						data := c.MustGet("data").([]byte)
 
 						if url == "/posts/:id" && config.CACHE_POST {
-							cacheErr := config.Client.Set(ctx, cacheKey, data, 0).Err()
+							cacheErr := utils.SetDataInCache(cacheKey, data, ctx)
 							if cacheErr != nil {
 								log.Println("🚀 Error caching data")
 								c.Abort()
 								return
 							}
 						} else if url == "/todos/:id" && config.CACHE_TODO {
-							cacheErr := config.Client.Set(ctx, cacheKey, data, 0).Err()
+							cacheErr := utils.SetDataInCache(cacheKey, data, ctx)
 							if cacheErr != nil {
 								log.Println("🚀 Error caching data")
 								c.Abort()

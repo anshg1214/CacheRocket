@@ -29,3 +29,21 @@ func ThrowNotFoundError(c *gin.Context) {
 	c.JSON(http.StatusNotFound, gin.H{})
 	c.Abort()
 }
+
+func GetValueFromCache(cacheKey string, ctx context.Context) ([]byte, error) {
+	cachedData, err := config.Client.Get(ctx, cacheKey).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	return []byte(cachedData), nil
+}
+
+func SetDataInCache(cacheKey string, data []byte, ctx context.Context) error {
+	err := config.Client.Set(ctx, cacheKey, data, 0).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
