@@ -1,13 +1,48 @@
 package config
 
+import (
+	"log"
+	"os"
+
+	"github.com/joho/godotenv"
+)
+
 const POST_URL = "https://jsonplaceholder.typicode.com/posts"
 
 const TODO_URL = "https://jsonplaceholder.typicode.com/todos"
 
 const PORT = "8080"
 
-const REDIS_URL = "localhost:6379"
+var REDIS_URL = os.Getenv("REDIS_URL")
 
-const CACHE_POST = true
+var CACHE_POST bool
 
-const CACHE_TODO = true
+var CACHE_TODO bool
+
+func init() {
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("❌ Error loading .env file")
+	}
+
+	if REDIS_URL == "" {
+		REDIS_URL = "localhost:6379"
+	}
+
+	cachePostEnv := os.Getenv("CACHE_POST")
+
+	if cachePostEnv == "false" {
+		CACHE_POST = false
+	} else {
+		CACHE_POST = true
+	}
+
+	cacheTodoEnv := os.Getenv("CACHE_TODO")
+
+	if cacheTodoEnv == "false" {
+		CACHE_TODO = false
+	} else {
+		CACHE_TODO = true
+	}
+}
