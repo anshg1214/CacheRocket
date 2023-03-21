@@ -1,8 +1,11 @@
 package main
 
 import (
+	"log"
+
 	"github.com/anshg1214/CacheRocket/config"
 	"github.com/anshg1214/CacheRocket/controller"
+	"github.com/anshg1214/CacheRocket/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -10,7 +13,7 @@ func main() {
 	router := gin.Default()
 
 	// Routes
-	router.GET("/posts/:id", controller.GetPost)
+	router.GET("/posts/:id", middleware.CacheMiddleware(), controller.GetPost)
 	router.GET("/todos/:id", controller.GetTodo)
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -18,8 +21,12 @@ func main() {
 		})
 	})
 
-	err := router.Run(":" + config.PORT)
+	redisErr := config.PingRedis()
+	if redisErr != nil {
+		log.Fatal("❌ Redis is not running")
+	}
 
+	err := router.Run(":" + config.PORT)
 	if err != nil {
 		panic(err)
 	}

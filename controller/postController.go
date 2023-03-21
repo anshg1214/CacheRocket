@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/anshg1214/CacheRocket/config"
+	"github.com/anshg1214/CacheRocket/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,7 +17,7 @@ func GetPost(c *gin.Context) {
 	// Get the post from the URL JSONPlaceholder API
 	response, err := http.Get(config.POST_URL + "/" + postID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		utils.ThrowInternalServerError(c, err)
 		return
 	}
 
@@ -25,7 +26,7 @@ func GetPost(c *gin.Context) {
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		utils.ThrowInternalServerError(c, err)
 		return
 	}
 
@@ -33,8 +34,16 @@ func GetPost(c *gin.Context) {
 	checkValidJson := json.Valid(body)
 
 	if !checkValidJson {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid JSON"})
+		utils.ThrowInvalidJSONError(c)
 		return
+	}
+
+	if config.CACHE_POST {
+		cacheErr := utils.CacheData("posts:"+postID, body)
+		if cacheErr != nil {
+			utils.ThrowInternalServerError(c, cacheErr)
+			return
+		}
 	}
 
 	// Send the response body to the client
