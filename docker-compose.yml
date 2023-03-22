@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: CacheRocket
+    command: "go run main.go"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/usr/src/app
+      - ./.env:/usr/src/app/.env
+    env_file: .env
+    depends_on:
+      - redis
+
+  redis:
+    container_name: CacheRocket-Redis
+    image: redis:alpine
+    ports:
+      - "6370:6379"
