@@ -13,13 +13,9 @@ func main() {
 	router := gin.Default()
 
 	// Routes
+	router.GET("/", controller.GetHome)
 	router.GET("/posts/:id", middleware.CacheMiddleware(), controller.GetPost)
 	router.GET("/todos/:id", middleware.CacheMiddleware(), controller.GetTodo)
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "Hey! The server is running!",
-		})
-	})
 
 	redisErr := config.PingRedis()
 	if redisErr != nil {

@@ -47,3 +47,13 @@ func SetDataInCache(cacheKey string, data []byte, ctx context.Context) error {
 
 	return nil
 }
+
+func FlushCache() error {
+	ctx := context.Background()
+	err := config.Client.FlushAll(ctx).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
