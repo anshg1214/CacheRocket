@@ -35,48 +35,50 @@ func CacheMiddleware() gin.HandlerFunc {
 			return
 		} else {
 			ctx := context.Background()
+
+			// Check if data is cached
 			cachedData, err := utils.GetValueFromCache(cacheKey, ctx)
-			if err != nil {
-
-				// Data is not cached, acquire a lock for this key
-				lock, _ := cacheLock.LoadOrStore(cacheKey, &sync.Mutex{})
-				lock.(*sync.Mutex).Lock()
-				defer lock.(*sync.Mutex).Unlock()
-
-				// Check if another request has fetched the data while we were waiting for the lock
-				cachedData, err = utils.GetValueFromCache(cacheKey, ctx)
-				if err != nil {
-					c.Next()
-
-					// If the request was successful, cache the data
-					if c.Writer.Status() == http.StatusOK {
-						data := c.MustGet("data").([]byte)
-
-						if url == "/posts/:id" && config.CACHE_POST {
-							cacheErr := utils.SetDataInCache(cacheKey, data, ctx)
-							if cacheErr != nil {
-								log.Println("🚀 Error caching data")
-								c.Abort()
-								return
-							}
-						} else if url == "/todos/:id" && config.CACHE_TODO {
-							cacheErr := utils.SetDataInCache(cacheKey, data, ctx)
-							if cacheErr != nil {
-								log.Println("🚀 Error caching data")
-								c.Abort()
-								return
-							}
-						}
-					}
-					return
-				}
+			if err == nil {
 				c.Data(http.StatusOK, "application/json", []byte(cachedData))
 				c.Abort()
 				return
 			}
 
-			c.Data(http.StatusOK, "application/json", []byte(cachedData))
-			c.Abort()
+			// Data is not cached, acquire a lock for this key
+			lock, _ := cacheLock.LoadOrStore(cacheKey, &sync.Mutex{})
+			lock.(*sync.Mutex).Lock()
+			defer lock.(*sync.Mutex).Unlock()
+
+			// Check if another request has fetched the data while we were waiting for the lock
+			cachedData, err = utils.GetValueFromCache(cacheKey, ctx)
+			if err == nil {
+				c.Data(http.StatusOK, "application/json", []byte(cachedData))
+				c.Abort()
+				return
+			}
+
+			c.Next()
+
+			// If the request was successful, cache the data
+			if c.Writer.Status() == http.StatusOK {
+				data := c.MustGet("data").([]byte)
+
+				if url == "/posts/:id" && config.CACHE_POST {
+					cacheErr := utils.SetDataInCache(cacheKey, data, ctx)
+					if cacheErr != nil {
+						log.Println("🚀 Error caching data")
+						c.Abort()
+						return
+					}
+				} else if url == "/todos/:id" && config.CACHE_TODO {
+					cacheErr := utils.SetDataInCache(cacheKey, data, ctx)
+					if cacheErr != nil {
+						log.Println("🚀 Error caching data")
+						c.Abort()
+						return
+					}
+				}
+			}
 			return
 		}
 	}

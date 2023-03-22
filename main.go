@@ -14,7 +14,7 @@ func main() {
 
 	// Routes
 	router.GET("/posts/:id", middleware.CacheMiddleware(), controller.GetPost)
-	router.GET("/todos/:id", controller.GetTodo)
+	router.GET("/todos/:id", middleware.CacheMiddleware(), controller.GetTodo)
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "Hey! The server is running!",
