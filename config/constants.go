@@ -7,17 +7,17 @@ import (
 	"github.com/joho/godotenv"
 )
 
-const POST_URL = "https://jsonplaceholder.typicode.com/posts"
+const (
+	POST_URL = "https://jsonplaceholder.typicode.com/posts"
+	TODO_URL = "https://jsonplaceholder.typicode.com/todos"
+	PORT     = "8080"
+)
 
-const TODO_URL = "https://jsonplaceholder.typicode.com/todos"
-
-const PORT = "8080"
-
-var REDIS_URL = os.Getenv("REDIS_URL")
-
-var CACHE_POST bool
-
-var CACHE_TODO bool
+var (
+	REDIS_URL  = os.Getenv("REDIS_URL")
+	CACHE_POST bool
+	CACHE_TODO bool
+)
 
 func init() {
 

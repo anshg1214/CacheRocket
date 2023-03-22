@@ -2,12 +2,11 @@ package controller
 
 import (
 	"encoding/json"
+	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 
-	"github.com/anshg1214/CacheRocket/config"
 	"github.com/anshg1214/CacheRocket/utils"
-	"github.com/gin-gonic/gin"
 )
 
 func GetTodo(c *gin.Context) {
@@ -15,11 +14,13 @@ func GetTodo(c *gin.Context) {
 	todoID := c.Param("id")
 
 	// Get the todo from the URL JSONPlaceholder API
-	response, err := http.Get(config.TODO_URL + "/" + todoID)
+	response, err := utils.FetchTodo(todoID)
 	if err != nil {
 		utils.ThrowInternalServerError(c, err)
 		return
 	}
+
+	defer response.Body.Close()
 
 	if response.StatusCode == http.StatusNotFound {
 		utils.ThrowNotFoundError(c)
@@ -28,9 +29,6 @@ func GetTodo(c *gin.Context) {
 		utils.ThrowInternalServerError(c, err)
 		return
 	}
-
-	// Close the response body
-	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {

@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"strings"
@@ -9,7 +10,6 @@ import (
 
 	"github.com/anshg1214/CacheRocket/config"
 	"github.com/anshg1214/CacheRocket/utils"
-	"github.com/gin-gonic/gin"
 )
 
 var cacheLock sync.Map

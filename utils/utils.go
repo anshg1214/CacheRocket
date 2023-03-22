@@ -4,8 +4,9 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/anshg1214/CacheRocket/config"
 	"github.com/gin-gonic/gin"
+
+	"github.com/anshg1214/CacheRocket/config"
 )
 
 func CacheData(cacheKey string, data []byte) error {
@@ -56,4 +57,20 @@ func FlushCache() error {
 	}
 
 	return nil
+}
+
+func FetchPost(id string) (*http.Response, error) {
+	resp, err := http.Get(config.POST_URL + "/" + id)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func FetchTodo(id string) (*http.Response, error) {
+	resp, err := http.Get(config.TODO_URL + "/" + id)
+	if err != nil {
+		return nil, err
+	}
+	return resp, err
 }

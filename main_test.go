@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -10,8 +12,6 @@ import (
 	"github.com/anshg1214/CacheRocket/config"
 	"github.com/anshg1214/CacheRocket/controller"
 	"github.com/anshg1214/CacheRocket/utils"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
 )
 
 var router *gin.Engine
@@ -76,7 +76,6 @@ func testGet(t *testing.T, path string, status int, cacheStatus bool) {
 	// Create a request to send to the above route
 	req, err := http.NewRequest("GET", path, nil)
 	assert.NoError(t, err, "Error creating request: %v", err)
-
 
 	// Create a response recorder
 	w := httptest.NewRecorder()
