@@ -6,13 +6,11 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"sync"
+	"time"
 
 	"github.com/anshg1214/CacheRocket/config"
 	"github.com/anshg1214/CacheRocket/utils"
 )
-
-var cacheLock sync.Map
 
 func CacheMiddleware() gin.HandlerFunc {
 
@@ -44,10 +42,28 @@ func CacheMiddleware() gin.HandlerFunc {
 				return
 			}
 
-			// Data is not cached, acquire a lock for this key
-			lock, _ := cacheLock.LoadOrStore(cacheKey, &sync.Mutex{})
-			lock.(*sync.Mutex).Lock()
-			defer lock.(*sync.Mutex).Unlock()
+			lockKey := cacheKey + ":lock"
+			for {
+				acquired, err := utils.AcquireLock(lockKey, 10*time.Second, ctx)
+				if err != nil {
+					log.Println("Error acquiring lock:", err)
+					return
+				}
+
+				if acquired {
+					break
+				}
+
+				time.Sleep(100 * time.Millisecond)
+			}
+
+			defer func() {
+				err := utils.ReleaseLock(lockKey, ctx)
+				if err != nil {
+					log.Println("Error releasing lock:", err)
+					return
+				}
+			}()
 
 			// Check if another request has fetched the data while we were waiting for the lock
 			cachedData, err = utils.GetValueFromCache(cacheKey, ctx)

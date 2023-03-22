@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -57,6 +58,18 @@ func FlushCache() error {
 	}
 
 	return nil
+}
+
+func AcquireLock(lockKey string, timeout time.Duration, ctx context.Context) (bool, error) {
+	status, err := config.Client.SetNX(ctx, lockKey, "1", timeout).Result()
+	if err != nil {
+		return false, err
+	}
+	return status, nil
+}
+
+func ReleaseLock(lockKey string, ctx context.Context) error {
+	return config.Client.Del(ctx, lockKey).Err()
 }
 
 func FetchPost(id string) (*http.Response, error) {
