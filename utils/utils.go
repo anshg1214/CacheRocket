@@ -10,13 +10,6 @@ import (
 	"github.com/anshg1214/CacheRocket/config"
 )
 
-func CacheData(cacheKey string, data []byte) error {
-	ctx := context.Background()
-	err := config.Client.Set(ctx, cacheKey, data, 0).Err()
-
-	return err
-}
-
 func ThrowInternalServerError(c *gin.Context, err error) {
 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	c.Abort()

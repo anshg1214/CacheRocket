@@ -42,6 +42,17 @@ func CacheMiddleware() gin.HandlerFunc {
 				return
 			}
 
+			/*
+				If we have multiple requests with the same id, and the data is not cached, we don't want to make multiple requests to the External API.
+				So we use a lock to make sure that only one request makes the API call, and the other requests wait for the data to be cached.
+
+				This is done using Redis. We set a lock with a timeout of 10 seconds.
+				If the lock is not acquired (this means that currently another request is fetching the data), we wait for 100 milliseconds and try again.
+
+				Once the lock is acquired, we check if another request has fetched the data while we were waiting for the lock.
+				Once the data is cached, we release the lock.
+			*/
+
 			lockKey := cacheKey + ":lock"
 			for {
 				acquired, err := utils.AcquireLock(lockKey, 10*time.Second, ctx)

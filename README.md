@@ -1,6 +1,6 @@
 # CacheRocket: Caching API Server
 
-This project is a simple API server built using Node.js that serves GET requests for data from two different endpoints: `/posts/:id` and `/todos/:id`. The data is fetched from https://jsonplaceholder.typicode.com and returned to the user.
+This project is a simple API server built using GoLang that serves GET requests for data from two different endpoints: `/posts/:id` and `/todos/:id`. The data is fetched from https://jsonplaceholder.typicode.com and returned to the user.
 
 In addition to serving data, the project also includes a `generic middleware` for caching API responses. This middleware caches data served over the API so that if the same API is called with the same parameters again, the response is served from the cache instead. The caching middleware is configurable, and can be enabled or disabled for a particular route.
 

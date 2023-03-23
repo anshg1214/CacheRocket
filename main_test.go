@@ -50,12 +50,11 @@ func TestMain(t *testing.T) {
 
 	// Setup redis
 	err := config.PingRedis()
-	if err != nil {
-		t.Error("❌ Redis is not running")
-	}
+	assert.NoError(t, err, "❌ Redis is not running")
 
 	// Flush redis
 	err = utils.FlushCache()
+	assert.NoError(t, err, "Error flushing cache: %v", err)
 
 	router = gin.Default()
 
@@ -88,9 +87,7 @@ func testGet(t *testing.T, path string, status int, cacheStatus bool) {
 
 	// Check the response body is what we expect
 	body, err := io.ReadAll(w.Body)
-	if err != nil {
-		t.Error(err)
-	}
+	assert.NoError(t, err, "Error reading response body: %v", err)
 
 	checkValidJson := json.Valid(body)
 	assert.Equal(t, true, checkValidJson)
